@@ -4,7 +4,10 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/client";
+import {
+  BROWSER_SESSION_STORAGE_KEY,
+  createClient,
+} from "@/lib/supabase/client";
 
 
 export default function LogoutButton() {
@@ -29,6 +32,10 @@ export default function LogoutButton() {
 
 
       try {
+        window.sessionStorage.removeItem(
+          BROWSER_SESSION_STORAGE_KEY
+        );
+
         const supabase =
           createClient();
 

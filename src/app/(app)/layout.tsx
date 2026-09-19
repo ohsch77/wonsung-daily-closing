@@ -10,6 +10,7 @@ import AppHeader from "@/components/layout/AppHeader";
 import AppSidebar from "@/components/layout/AppSidebar";
 import MobileNav from "@/components/layout/MobileNav";
 import LogoutButton from "@/components/auth/LogoutButton";
+import SessionLifecycleGuard from "@/components/auth/SessionLifecycleGuard";
 
 import type {
   ManagerProfile,
@@ -117,7 +118,8 @@ export default async function AppLayout({
     managerData as ManagerProfile;
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9]">
+    <SessionLifecycleGuard>
+      <div className="min-h-screen bg-[#F6F7F9]">
 
       <AppSidebar
         manager={manager}
@@ -139,6 +141,7 @@ export default async function AppLayout({
         manager={manager}
       />
 
-    </div>
+      </div>
+    </SessionLifecycleGuard>
   );
 }

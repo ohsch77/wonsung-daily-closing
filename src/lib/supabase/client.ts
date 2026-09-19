@@ -1,5 +1,8 @@
 import { createBrowserClient } from "@supabase/ssr";
 
+export const BROWSER_SESSION_STORAGE_KEY =
+  "wonsung-daily-closing:browser-session";
+
 export function createClient() {
   const supabaseUrl =
     process.env.NEXT_PUBLIC_SUPABASE_URL;

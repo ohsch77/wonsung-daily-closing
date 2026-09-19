@@ -7,7 +7,10 @@ import {
 
 import { useRouter } from "next/navigation";
 
-import { createClient } from "@/lib/supabase/client";
+import {
+  BROWSER_SESSION_STORAGE_KEY,
+  createClient,
+} from "@/lib/supabase/client";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -59,6 +62,12 @@ export default function LoginForm() {
     }
 
     setErrorMessage("");
+
+    if (typeof window !== "undefined") {
+      window.sessionStorage.removeItem(
+        BROWSER_SESSION_STORAGE_KEY
+      );
+    }
 
 
     const normalizedEmployeeNo =
@@ -204,6 +213,11 @@ export default function LoginForm() {
         return;
       }
 
+      window.sessionStorage.setItem(
+        BROWSER_SESSION_STORAGE_KEY,
+        "active"
+      );
+
 
       router.replace(
         "/closing-report"
@@ -212,6 +226,12 @@ export default function LoginForm() {
       router.refresh();
 
     } catch {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(
+          BROWSER_SESSION_STORAGE_KEY
+        );
+      }
+
       setErrorMessage(
         "로그인 처리 중 오류가 발생했습니다."
       );
