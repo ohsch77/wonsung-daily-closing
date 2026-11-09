@@ -659,17 +659,21 @@ export default function DailyPerformanceWorkspace({
 
 
     async function loadReport() {
+      // Independent read-only requests: keep creation and saving sequential below.
+      const [editableResult, initialReportResult] = await Promise.all([
+        supabase.rpc("is_closing_date_editable", {
+          p_report_date: selectedDate,
+        }),
+        supabase.from("daily_reports")
+          .select("id,status")
+          .eq("report_date", selectedDate)
+          .eq("manager_id", selectedManagerId)
+          .maybeSingle(),
+      ]);
       const {
         data: editableData,
         error: editableError,
-      } =
-        await supabase.rpc(
-          "is_closing_date_editable",
-          {
-            p_report_date:
-              selectedDate,
-          }
-        );
+      } = editableResult;
 
       if (editableError) {
         throw editableError;
@@ -681,23 +685,7 @@ export default function DailyPerformanceWorkspace({
       let {
         data: report,
         error: reportError,
-      } =
-        await supabase
-          .from(
-            "daily_reports"
-          )
-          .select(
-            "id,status"
-          )
-          .eq(
-            "report_date",
-            selectedDate
-          )
-          .eq(
-            "manager_id",
-            selectedManagerId
-          )
-          .maybeSingle();
+      } = initialReportResult;
 
       if (reportError) {
         throw reportError;

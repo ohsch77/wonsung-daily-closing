@@ -27,7 +27,11 @@ import {
   useRouter,
 } from "next/navigation";
 
-import SystemPerformanceInputModal from "@/components/system-performance/SystemPerformanceInputModal";
+import dynamic from "next/dynamic";
+
+const SystemPerformanceInputModal = dynamic(() =>
+  import("@/components/system-performance/SystemPerformanceInputModal")
+);
 
 import type {
   SystemPerformanceInputTarget,

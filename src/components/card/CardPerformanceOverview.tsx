@@ -26,7 +26,11 @@ import {
   useRouter,
 } from "next/navigation";
 
-import CardImportModal from "@/components/card/CardImportModal";
+import dynamic from "next/dynamic";
+
+const CardImportModal = dynamic(() =>
+  import("@/components/card/CardImportModal")
+);
 
 import {
   createClient,

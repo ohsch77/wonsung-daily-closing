@@ -51,7 +51,11 @@ import type {
   SystemCompareStatus,
 } from "@/lib/analytics/system-compare";
 
-import MetricLibraryBuilder from "@/components/analytics/MetricLibraryBuilder";
+import dynamic from "next/dynamic";
+
+const MetricLibraryBuilder = dynamic(() =>
+  import("@/components/analytics/MetricLibraryBuilder")
+);
 
 import {
   buildBuilderCustomAnalysisResult,

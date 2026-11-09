@@ -92,6 +92,22 @@ async function fetchMetricValues(
   const allRows:
     Record<string, unknown>[] = [];
 
+  // Bound concurrency to three batches. Each batch retains its original
+  // pagination, ordering, filters and error handling; Promise.all keeps order.
+  if (reportIds.length > REPORT_BATCH_SIZE) {
+    for (let start = 0; start < reportIds.length; start += REPORT_BATCH_SIZE * 3) {
+      const batches: string[][] = [];
+      for (let offset = start; offset < Math.min(start + REPORT_BATCH_SIZE * 3, reportIds.length); offset += REPORT_BATCH_SIZE) {
+        batches.push(reportIds.slice(offset, offset + REPORT_BATCH_SIZE));
+      }
+      const results = await Promise.all(
+        batches.map((batch) => fetchMetricValues(supabase, batch))
+      );
+      for (const rows of results) allRows.push(...rows);
+    }
+    return allRows;
+  }
+
   for (
     let batchStart = 0;
     batchStart < reportIds.length;
