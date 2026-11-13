@@ -48,6 +48,14 @@ type SaveState =
   | "error";
 
 
+function configuredOrderOf(value: unknown): number {
+  if (value && typeof value === "object" && "displayOrder" in value) {
+    const order = Number(value.displayOrder);
+    if (Number.isFinite(order)) return order;
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
 function createEmptyValues(
   metrics: DailyMetric[]
 ) {
@@ -287,7 +295,7 @@ export default function DailyPerformanceWorkspace({
             availableMetricSet.has(
               metric.id
             )
-        ),
+        ).sort((a, b) => configuredOrderOf(a) - configuredOrderOf(b)),
       [
         metrics,
         availableMetricSet,
@@ -316,7 +324,7 @@ export default function DailyPerformanceWorkspace({
             visibleCategoryIds.has(
               category.id
             )
-        ),
+        ).sort((a, b) => configuredOrderOf(a) - configuredOrderOf(b)),
       [
         categories,
         visibleCategoryIds,
@@ -795,26 +803,44 @@ export default function DailyPerformanceWorkspace({
         return;
       }
 
+      // 기존 값과 현재 설정의 사용중 입력항목을 동시에 조회합니다.
+      // 계산형(rate) 항목은 직접 입력 대상에서 제외합니다.
+      const [
+        metricValuesResult,
+        configuredMetricsResult,
+        configuredCategoriesResult,
+      ] = await Promise.all([
+        supabase.from("daily_metric_values")
+          .select("metric_id,value")
+          .eq("report_id", report.id),
+        supabase.from("metrics")
+          .select("id,category_id,is_active,aggregation_type"),
+        supabase.from("metric_categories")
+          .select("id,is_active"),
+      ]);
+
       const {
         data: metricValues,
         error: valueError,
-      } =
-        await supabase
-          .from(
-            "daily_metric_values"
-          )
-          .select(
-            "metric_id,value"
-          )
-          .eq(
-            "report_id",
-            report.id
-          );
+      } = metricValuesResult;
+      if (valueError) throw valueError;
+      if (configuredMetricsResult.error) throw configuredMetricsResult.error;
+      if (configuredCategoriesResult.error) throw configuredCategoriesResult.error;
 
-
-      if (valueError) {
-        throw valueError;
-      }
+      const activeCategoryIds = new Set(
+        (configuredCategoriesResult.data ?? [])
+          .filter((category) => category.is_active !== false)
+          .map((category) => String(category.id))
+      );
+      const activeInputMetricIds = new Set(
+        (configuredMetricsResult.data ?? [])
+          .filter((metric) =>
+            metric.is_active !== false &&
+            metric.aggregation_type !== "rate" &&
+            activeCategoryIds.has(String(metric.category_id))
+          )
+          .map((metric) => String(metric.id))
+      );
 
 
       if (
@@ -846,8 +872,16 @@ export default function DailyPerformanceWorkspace({
           metrics
         );
 
+      // 설정에서 전달된 입력 항목 전체를 표시/저장 대상으로 포함합니다.
+      // 기존 행은 아래 루프에서 그대로 읽어, 이미 저장된 값은 보존합니다.
       const nextMetricIds:
-        string[] = [];
+        string[] = Array.from(
+          new Set(
+            metrics
+              .filter((metric) => activeInputMetricIds.has(metric.id))
+              .map((metric) => metric.id)
+          )
+        );
 
 
       for (
@@ -859,9 +893,6 @@ export default function DailyPerformanceWorkspace({
             row.metric_id
           );
 
-        nextMetricIds.push(
-          metricId
-        );
 
 
         const numericValue =

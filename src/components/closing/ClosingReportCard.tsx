@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { createClient } from "@/lib/supabase/client";
+import { configureClosingCard } from "@/lib/closing/configured-report-card";
 
 
 type ValuePair = {
@@ -460,7 +461,8 @@ function getDateTitle(
 
 
 function drawReportCanvas(
-  payload: ClosingReportPayload
+  payload: ClosingReportPayload,
+  sections: ReportSection[] = REPORT_SECTIONS
 ) {
   const scale = 2;
 
@@ -477,7 +479,7 @@ function drawReportCanvas(
     payload.managers ?? [];
 
   const bodyRowCount =
-    REPORT_SECTIONS.reduce(
+    sections.reduce(
       (
         count,
         section
@@ -922,7 +924,7 @@ function drawReportCanvas(
 
   for (
     const section of
-    REPORT_SECTIONS
+    sections
   ) {
     const sectionHeight =
       section.rows.length *
@@ -1149,7 +1151,7 @@ function drawReportCanvas(
 
   for (
     const section of
-    REPORT_SECTIONS
+    sections
   ) {
     sectionBoundaryY +=
       section.rows.length *
@@ -1280,6 +1282,8 @@ export default function ClosingReportCard({
     useState<ClosingReportPayload | null>(
       null
     );
+  const [reportSections, setReportSections] =
+    useState<ReportSection[]>(REPORT_SECTIONS);
   const [previewUrl, setPreviewUrl] =
     useState<string | null>(null);
   const [loading, setLoading] =
@@ -1331,9 +1335,13 @@ export default function ClosingReportCard({
             );
           }
 
-          setPayload(
-            nextPayload
+          const configured = await configureClosingCard(
+            supabase,
+            nextPayload,
+            REPORT_SECTIONS
           );
+          setReportSections(configured.sections);
+          setPayload(configured.payload);
         }
         catch (error) {
           setPayload(null);
@@ -1387,7 +1395,8 @@ export default function ClosingReportCard({
           try {
             const canvas =
               drawReportCanvas(
-                payload
+                payload,
+                reportSections
               );
 
             setPreviewUrl(
@@ -1413,7 +1422,7 @@ export default function ClosingReportCard({
         timer
       );
     };
-  }, [payload]);
+  }, [payload, reportSections]);
 
 
   const downloadPng =
@@ -1432,7 +1441,8 @@ export default function ClosingReportCard({
         try {
           const canvas =
             drawReportCanvas(
-              payload
+              payload,
+              reportSections
             );
 
           const blob =
@@ -1495,6 +1505,7 @@ export default function ClosingReportCard({
       [
         downloading,
         payload,
+        reportSections,
       ]
     );
 
