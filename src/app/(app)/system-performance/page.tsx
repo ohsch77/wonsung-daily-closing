@@ -1,3 +1,4 @@
+import { getRequestClaims, getRequestManager } from "@/lib/supabase/request-cache";
 import {
   redirect,
 } from "next/navigation";
@@ -113,8 +114,7 @@ export default async function SystemPerformancePage({
     data: claimsData,
     error: claimsError,
   } =
-    await supabase.auth
-      .getClaims();
+    await getRequestClaims();
 
 
   const userId =
@@ -149,16 +149,7 @@ export default async function SystemPerformancePage({
     data: manager,
     error: managerError,
   } =
-    await supabase
-      .from("managers")
-      .select(
-        "id,is_active"
-      )
-      .eq(
-        "auth_user_id",
-        userId
-      )
-      .maybeSingle();
+    await getRequestManager(userId);
 
 
   if (

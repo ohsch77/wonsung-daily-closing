@@ -223,8 +223,6 @@ export default function LoginForm() {
         "/closing-report"
       );
 
-      router.refresh();
-
     } catch {
       if (typeof window !== "undefined") {
         window.sessionStorage.removeItem(

@@ -1,3 +1,4 @@
+import { getRequestClaims, getRequestManager } from "@/lib/supabase/request-cache";
 import {
   createClient,
 } from "@/lib/supabase/server";
@@ -200,8 +201,7 @@ export async function loadPerformanceAnalysisSnapshot(
     data: claimsData,
     error: claimsError,
   } =
-    await supabase.auth
-      .getClaims();
+    await getRequestClaims();
 
   const userId =
     claimsData?.claims?.sub;
@@ -229,16 +229,7 @@ export async function loadPerformanceAnalysisSnapshot(
     metricsResult,
   ] =
     await Promise.all([
-      supabase
-        .from("managers")
-        .select(
-          "id,is_active"
-        )
-        .eq(
-          "auth_user_id",
-          userId
-        )
-        .maybeSingle(),
+      getRequestManager(userId),
 
       supabase
         .from("managers")

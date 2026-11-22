@@ -1,10 +1,8 @@
+import { getRequestClaims, getRequestManager } from "@/lib/supabase/request-cache";
 import {
   redirect,
 } from "next/navigation";
 
-import {
-  createClient,
-} from "@/lib/supabase/server";
 
 import AppHeader from "@/components/layout/AppHeader";
 import AppSidebar from "@/components/layout/AppSidebar";
@@ -21,15 +19,11 @@ export default async function AppLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase =
-    await createClient();
-
   const {
     data: claimsData,
     error: claimsError,
   } =
-    await supabase.auth
-      .getClaims();
+    await getRequestClaims();
 
   const userId =
     claimsData?.claims?.sub;
@@ -45,23 +39,7 @@ export default async function AppLayout({
     data: managerData,
     error: managerError,
   } =
-    await supabase
-      .from("managers")
-      .select(
-        `
-          id,
-          employee_no,
-          name,
-          role,
-          is_active,
-          display_order
-        `
-      )
-      .eq(
-        "auth_user_id",
-        userId
-      )
-      .maybeSingle();
+    await getRequestManager(userId);
 
   if (
     managerError ||

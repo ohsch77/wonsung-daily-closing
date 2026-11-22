@@ -1,3 +1,4 @@
+import { getRequestClaims, getRequestManager } from "@/lib/supabase/request-cache";
 import {
   redirect,
 } from "next/navigation";
@@ -76,8 +77,7 @@ export default async function CashLedgerPage() {
     data: claimsData,
     error: claimsError,
   } =
-    await supabase.auth
-      .getClaims();
+    await getRequestClaims();
 
   const userId =
     claimsData?.claims?.sub;
@@ -97,16 +97,7 @@ export default async function CashLedgerPage() {
     expenseManagersResult,
   ] =
     await Promise.all([
-      supabase
-        .from("managers")
-        .select(
-          "id,name,role,is_active"
-        )
-        .eq(
-          "auth_user_id",
-          userId
-        )
-        .maybeSingle(),
+      getRequestManager(userId),
 
       supabase
         .from(
