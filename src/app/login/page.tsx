@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
+import { measureServerPerformance } from "@/lib/performance/diagnostics";
 
 import LoginForm from "./LoginForm";
 
@@ -17,8 +18,10 @@ export default async function LoginPage() {
   const {
     data: claimsData,
   } =
-    await supabase.auth
-      .getClaims();
+    await measureServerPerformance(
+      "login:auth-getClaims",
+      () => supabase.auth.getClaims()
+    );
 
 
   if (

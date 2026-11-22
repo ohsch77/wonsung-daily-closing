@@ -30,6 +30,7 @@ import type {
 import {
   createClient,
 } from "@/lib/supabase/server";
+import { measureServerPerformance } from "@/lib/performance/diagnostics";
 
 
 export const dynamic =
@@ -343,15 +344,23 @@ export default async function AdminPage() {
     expenseCategoriesResult,
   ] =
     await Promise.all([
-      supabase.rpc(
-        "admin_list_managers"
+      measureServerPerformance(
+        "admin:rpc-list-managers",
+        () => supabase.rpc(
+          "admin_list_managers"
+        )
       ),
-      supabase.rpc(
-        "admin_list_daily_metric_settings"
+      measureServerPerformance(
+        "admin:rpc-daily-metric-settings",
+        () => supabase.rpc(
+          "admin_list_daily_metric_settings"
+        )
       ),
-
-      supabase.rpc(
-        "admin_list_sales_cash_expense_categories"
+      measureServerPerformance(
+        "admin:rpc-sales-cash-expense-categories",
+        () => supabase.rpc(
+          "admin_list_sales_cash_expense_categories"
+        )
       ),
     ]);
 

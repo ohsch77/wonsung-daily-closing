@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { measureServerPerformance } from "@/lib/performance/diagnostics";
 
 export async function updateSession(
   request: NextRequest
@@ -75,7 +76,10 @@ export async function updateSession(
    * 서버 인증 판단에 getSession()을
    * 사용하지 않습니다.
    */
-  await supabase.auth.getClaims();
+  await measureServerPerformance(
+    "proxy:auth-getClaims",
+    () => supabase.auth.getClaims()
+  );
 
   return supabaseResponse;
 }

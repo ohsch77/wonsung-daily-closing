@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import { createClient } from "@/lib/supabase/server";
+import { measureServerPerformance } from "@/lib/performance/diagnostics";
 
 /*
  * 동일한 Server Component 렌더 요청에서 중복되는 인증 검증과
@@ -10,15 +11,21 @@ import { createClient } from "@/lib/supabase/server";
  */
 export const getRequestClaims = cache(async () => {
   const supabase = await createClient();
-  return supabase.auth.getClaims();
+  return measureServerPerformance(
+    "render:auth-getClaims",
+    () => supabase.auth.getClaims()
+  );
 });
 
 export const getRequestManager = cache(async (userId: string) => {
   const supabase = await createClient();
 
-  return supabase
-    .from("managers")
-    .select("id,employee_no,name,role,is_active,display_order")
-    .eq("auth_user_id", userId)
-    .maybeSingle();
+  return measureServerPerformance(
+    "render:manager-query",
+    () => supabase
+      .from("managers")
+      .select("id,employee_no,name,role,is_active,display_order")
+      .eq("auth_user_id", userId)
+      .maybeSingle()
+  );
 });
